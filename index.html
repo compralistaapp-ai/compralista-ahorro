@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#176b52">
+<title>CompraLista – compra y ahorro</title>
+<style>
+:root{--green:#176b52;--pale:#eaf5ef;--ink:#20312a;--muted:#65756d;--line:#dce7e0;--white:#fff}
+*{box-sizing:border-box}body{margin:0;background:#f5f8f6;color:var(--ink);font:16px system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{background:var(--green);color:white;padding:24px 18px 20px}header h1{margin:0;font-size:27px}header p{margin:5px 0 0;opacity:.9}
+main{max-width:760px;margin:0 auto;padding:16px}.card{background:white;border:1px solid var(--line);border-radius:16px;padding:17px;margin:0 0 15px;box-shadow:0 2px 8px #173d2b0a}
+h2{font-size:19px;margin:0 0 12px}.muted{color:var(--muted);font-size:14px}
+label{display:block;font-weight:600;margin:10px 0 6px}input,button{font:inherit}input[type=number],input[type=text]{width:100%;padding:12px;border:1px solid #cbd9d0;border-radius:10px;background:white;color:var(--ink)}
+button{border:0;border-radius:10px;padding:11px 15px;background:var(--green);color:white;font-weight:650;cursor:pointer;margin-top:10px}
+button.secondary{background:var(--pale);color:var(--green)}button.danger{background:#fff0ee;color:#a63226}
+.row{display:flex;gap:9px;align-items:center}.row input{flex:1;min-width:0}.money{font-size:30px;font-weight:750;color:var(--green);margin:5px 0}
+.item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}.item:last-child{border:0}.item span{flex:1;overflow-wrap:anywhere}.item.done span{text-decoration:line-through;color:var(--muted)}
+.item button{margin:0;padding:7px 10px}.tabs{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 14px}.tabs a{color:var(--green);background:var(--pale);text-decoration:none;padding:8px 11px;border-radius:20px;font-size:14px}
+.tip{background:var(--pale);padding:12px;border-radius:10px;margin:8px 0}.foot{text-align:center;color:var(--muted);font-size:12px;padding:12px}
+</style>
+</head>
+<body>
+<header><h1>🛒 CompraLista</h1><p>Organiza tu compra, controla tus gastos y ahorra.</p></header>
+<main>
+<nav class="tabs"><a href="#presupuesto">Mi presupuesto</a><a href="#lista">Mi lista</a><a href="#comidas">Comidas</a><a href="#consejos">Consejos</a></nav>
+<section class="card" id="presupuesto">
+<h2>💶 Mi presupuesto</h2><label for="budget">Presupuesto mensual (€)</label>
+<div class="row"><input id="budget" type="number" min="0" step="0.01" placeholder="Ej. 250"><button id="saveBudget">Guardar</button></div>
+<p class="muted">Dinero disponible este mes</p><div class="money" id="remaining">0,00 €</div><p class="muted" id="spent">Gastado: 0,00 €</p>
+<h3>Apuntar un gasto</h3><div class="row"><input id="expenseName" type="text" placeholder="¿En qué has gastado?"><input id="expenseAmount" type="number" min="0" step="0.01" placeholder="€" style="max-width:105px"></div><button id="addExpense">Añadir gasto</button><div id="expenses"></div>
+</section>
+<section class="card" id="lista"><h2>📝 Mi lista de la compra</h2><div class="row"><input id="newItem" type="text" placeholder="Añadir producto"><button id="addItem">Añadir</button></div><div id="shoppingList"></div></section>
+<section class="card" id="comidas"><h2>🍽️ Ideas de comidas económicas</h2><div class="tip"><b>Lentejas con verduras</b><br><span class="muted">Lentejas, zanahoria, cebolla y patata. Cocina para varios días.</span></div><div class="tip"><b>Arroz con verduras y huevo</b><br><span class="muted">Aprovecha las verduras que tengas en la nevera.</span></div><div class="tip"><b>Tortilla de patata</b><br><span class="muted">Sencilla, económica y sirve para varias raciones.</span></div><div class="tip"><b>Pasta con tomate y atún</b><br><span class="muted">Una comida rápida con ingredientes fáciles de encontrar.</span></div></section>
+<section class="card" id="consejos"><h2>💡 Consejos para ahorrar</h2><div class="tip">Haz una lista antes de ir al supermercado y procura seguirla.</div><div class="tip">Compara el precio por kilo o litro, no solo el precio del envase.</div><div class="tip">Planifica varias comidas para aprovechar los ingredientes.</div><div class="tip">Revisa la despensa antes de comprar para evitar duplicados.</div></section>
+<p class="foot">CompraLista guarda tus datos en este dispositivo. No se envían a ningún servidor.</p>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+let data={budget:0,expenses:[],items:[]};
+try{data={...data,...JSON.parse(localStorage.getItem('compralista-data')||'{}')}}catch(e){}
+function save(){localStorage.setItem('compralista-data',JSON.stringify(data));render()}
+function euro(n){return Number(n||0).toLocaleString('es-ES',{style:'currency',currency:'EUR'})}
+function render(){
+$('budget').value=data.budget||'';
+const spent=data.expenses.reduce((s,x)=>s+Number(x.amount),0);
+$('remaining').textContent=euro(Number(data.budget)-spent);
+$('spent').textContent='Gastado: '+euro(spent);
+$('expenses').innerHTML='';
+data.expenses.forEach((x,i)=>{const d=document.createElement('div');d.className='item';const s=document.createElement('span');s.textContent=x.name+' — '+euro(x.amount);const b=document.createElement('button');b.className='danger';b.textContent='Borrar';b.onclick=()=>{data.expenses.splice(i,1);save()};d.append(s,b);$('expenses').append(d)});
+$('shoppingList').innerHTML='';
+data.items.forEach((x,i)=>{const d=document.createElement('div');d.className='item'+(x.done?' done':'');const c=document.createElement('input');c.type='checkbox';c.checked=!!x.done;c.onchange=()=>{x.done=c.checked;save()};const s=document.createElement('span');s.textContent=x.name;const b=document.createElement('button');b.className='danger';b.textContent='Quitar';b.onclick=()=>{data.items.splice(i,1);save()};d.append(c,s,b);$('shoppingList').append(d)});
+}
+$('saveBudget').onclick=()=>{data.budget=Math.max(0,Number($('budget').value)||0);save()};
+$('addExpense').onclick=()=>{const name=$('expenseName').value.trim(),amount=Number($('expenseAmount').value);if(!name||amount<=0){alert('Escribe el concepto y una cantidad válida.');return}data.expenses.push({name,amount});$('expenseName').value='';$('expenseAmount').value='';save()};
+$('addItem').onclick=()=>{const name=$('newItem').value.trim();if(!name)return;data.items.push({name,done:false});$('newItem').value='';save()};
+$('newItem').addEventListener('keydown',e=>{if(e.key==='Enter')$('addItem').click()});
+render();
+</script>
+</body></html>
